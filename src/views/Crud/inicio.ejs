@@ -1,0 +1,178 @@
+<body>
+    <div class="main-container">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1 class="header-title">Lista de Usuarios</h1>
+            <div style="display: flex; align-items: center;">
+                <a href="/crear" class="btn btn-primary" type="button">
+                    <ion-icon name="add-outline"></ion-icon> Crear usuario
+                </a>
+        
+                <!-- Tres puntos adicionales -->
+                <div class="dropdown">
+                    <div class="btn-group ellipsis-button" role="group">
+                        <ion-icon name="ellipsis-vertical-outline"></ion-icon>
+                    </div>
+                    <div class="ellipsis-content">
+                   <a href="/Crud/Users/exportar-pdf">Exportar a PDF</a>
+                   <a href="/Crud/Users/previsualizar-pdf" target="_blank">Previsualizar PDF</a>
+
+                <a href="/Crud/Users/exportar-excel">Exportar a Excel</a>
+                <a href="/Crud/Users/exportar-csv">Exportar a CSV</a>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        
+        <hr class="separator">
+    
+        <form id="searchForm" action="/Crud/Users/usuarios" method="GET"
+            style="display: flex; justify-content: space-between; align-items: center;">
+            <div >
+                <label for="entries" style="margin-right: 5px;">Mostrar:</label>
+                <select id="entries" name="entries" onchange="updateTable(this.value)">
+                    <option value="5" <%= itemsPerPage === 5 ? 'selected' : '' %>>5</option>
+                    <option value="15" <%= itemsPerPage === 15 ? 'selected' : '' %>>15</option>
+                    <option value="20" <%= itemsPerPage === 20 ? 'selected' : '' %>>20</option>
+                </select> ítems por página
+            </div>
+    
+            <div style="display: flex; align-items: center;">
+                <input type="text" name="search" id="search" class="search-input"
+                placeholder="Buscar " value="<%= search %>">
+
+            </div>
+        </form>
+
+        <div class="table-container">
+            <table class="user-table">
+                <thead>
+                    <tr>
+                        <th class="table-header">N°</th>
+                        <th class="table-header">Nombre</th>
+                        <th class="table-header">Email</th>
+                        <th class="table-header">Foto</th>
+                        <th class="table-header">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% let userCount = (currentPage - 1) * itemsPerPage + 1; %>
+                    <% usuarios.forEach(usuario => { %>
+                        <tr class="<%= userCount % 2 === 0 ? 'even-row' : '' %>">
+                            <td class="table-cell"><%= userCount++ %></td>
+                            <td class="table-cell"><%= usuario.name %></td>
+                            <td class="table-cell"><%= usuario.email %></td>
+                            <td class="table-cell">
+                                <% if (usuario.profileImageUrl) { %>
+                                    <img src="<%= usuario.profileImageUrl %>" alt="Foto de <%= usuario.name %>" class="user-image">
+                                <% } else { %>
+                                    <img src="/imagenes/avatar.jpg" alt="Foto predeterminada" class="user-image">
+                                <% } %>
+                            </td>
+                            <td class="table-cell">
+                                <div class="btn-group" role="group" aria-label="button group">
+                                    <a href="/Crud/Users/usuarios/editar/<%= usuario.id %>">
+                                        <ion-icon name="pencil-outline"></ion-icon>
+                                    </a>
+                                </div>
+                                <div class="btn-group" role="group" aria-label="button group">
+                                    <form action="usuarios/eliminar/<%= usuario.id %>?_method=DELETE" method="POST">
+                                        <button type="submit" class="action-button">
+                                            <ion-icon name="trash-outline"></ion-icon>
+                                        </button>
+                                    </form>
+                                </div>
+                                <div class="dropdown">
+                                    <div class="btn-group ellipsis-button" role="group">
+                                        <ion-icon name="ellipsis-vertical-outline"></ion-icon>
+                                    </div>
+                                    <div class="ellipsis-content">
+                                        <a href="#">Restablecer contraseña</a>
+                                        <a href="#">Inhabilitar cuenta</a>
+                                        <a href="#">Ver perfil</a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+     
+        
+
+        <div class="pagination-container">
+            <div class="pagination-info">
+                <span>Mostrando:</span>
+                <span id="pagination-info">Página <%= currentPage %> de <%= totalPages %>.</span>
+            </div>
+            <div class="page-numbers">
+                <% const pageGroupSize = 3; %>
+                <% const startPage = Math.max(1, currentPage - Math.floor(pageGroupSize / 2)); %>
+                <% const endPage = Math.min(startPage + pageGroupSize - 1, totalPages); %>
+
+                <a href="?page=<%= currentPage - 1 %>"
+                    class="page-number <%= currentPage === 1 ? 'disabled hidden' : '' %>">&lt;</a>
+                <% for (let i = startPage; i <= endPage; i++) { %>
+                    <a href="?page=<%= i %>"
+                        class="page-number <%= i === currentPage ? 'active' : '' %>"><%= i %></a>
+                <% } %>
+                <% const hasNextPage = currentPage < totalPages; %>
+                <a href="<%= hasNextPage ? `?page=${currentPage + 1}` : '#' %>"
+                    class="page-number <%= !hasNextPage ? 'disabled hidden' : '' %>">&gt;</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            const searchInput = document.getElementById('search');
+
+            searchInput.addEventListener('input', function () {
+                const searchTerm = searchInput.value.toLowerCase();
+
+                $.ajax({
+                    type: 'GET',
+                    url: '/Crud/Users/usuarios',
+                    data: { search: searchTerm },
+                    success: function (data) {
+                        const container = document.createElement('div');
+                        container.innerHTML = data;
+
+                        const newTable = container.querySelector('.user-table');
+                        const newPagination = container.querySelector('.pagination-container');
+
+                        $('.user-table').replaceWith(newTable);
+                        $('.pagination-container').replaceWith(newPagination);
+                    },
+                    error: function (error) {
+                        console.error('Error en la solicitud AJAX:', error);
+                    }
+                });
+            });
+        });
+
+        function updateTable(entries) {
+            $.ajax({
+                type: 'GET',
+                url: '/Crud/Users/usuarios',
+                data: { entries: entries },
+                success: function (data) {
+                    const container = document.createElement('div');
+                    container.innerHTML = data;
+
+                    const newTable = container.querySelector('.user-table');
+                    const newPagination = container.querySelector('.pagination-container');
+
+                    $('.user-table').replaceWith(newTable);
+                    $('.pagination-container').replaceWith(newPagination);
+                },
+                error: function (error) {
+                    console.error('Error en la solicitud AJAX:', error);
+                }
+            });
+        }
+    </script>
+</body>

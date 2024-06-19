@@ -1,0 +1,22 @@
+
+<form action="/crear" method="POST">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+  <h1>Crear Usuario</h1>
+
+        <input type="text" name="name" placeholder="Nombre" required>
+
+        <input type="email" name="email" placeholder="Correo Electrónico" required>
+
+        <input type="password" name="password" id="password" placeholder="Contraseña" required>
+
+        <input type="password" name="confirm_password" id="confirm_password" placeholder="Confirmar Contraseña" required>
+
+
+        <button type="submit">Crear usuario</button>
+
+        <a href="/inicio" class="btn">Volver a la Lista de Usuarios</a>
+
+    </form>
+
+</div>
+
